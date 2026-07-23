@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create zip archive
+        run: |
+          find . -maxdepth 1 -type d -name '.*' ! -name '.' -exec rm -rf {} +
+          zip -r FirewallCleaner-${{ github.event.inputs.version || github.ref_name }}.zip .
+
+      - name: Publish Release
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: 'FirewallCleaner-${{ github.event.inputs.version || github.ref_name }}.zip'
+          commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+          tag: ${{ github.event.inputs.version || github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
